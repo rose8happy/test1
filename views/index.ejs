@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+
+  <body>
+    <video autoplay controls id="video"></video>
+    <button onclick="showVideo()">打开摄像头</button>
+    <canvas id="canvas"></canvas>
+    <button onclick="capture()">拍照</button>
+    <button onclick="changeFilter()">滤镜</button>
+  </body>
+
+  <script>
+    function canGetUserMediaUse() {
+      return !!(navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia
+              || navigator.msGetUserMedia);
+    }
+
+    function getUserMedia(constrains,success,error){
+      if(navigator.mediaDevices.getUserMedia){
+        //最新标准API
+        promise = navigator.mediaDevices.getUserMedia(constrains).then(success).catch(error);
+      } else if (navigator.webkitGetUserMedia){
+        //webkit内核浏览器
+        promise = navigator.webkitGetUserMedia(constrains).then(success).catch(error);
+      } else if (navigator.mozGetUserMedia){
+        //Firefox浏览器
+        promise = navagator.mozGetUserMedia(constrains).then(success).catch(error);
+      } else if (navigator.getUserMedia){
+        //旧版API
+        promise = navigator.getUserMedia(constrains).then(success).catch(error);
+      }
+    }
+
+    function showVideo() {
+      if (canGetUserMediaUse()) {
+        getUserMedia({
+          video:true,
+          audio:true
+        },function (stream) {
+          mediaStream = stream;
+          const video = document.getElementById('video');
+          video.srcObject = stream;
+          video.play();
+        },function (error) {
+          console.log("访问用户媒体设备失败：",error.name,error.message);
+        })
+      }else  { alert('您的浏览器不兼容');  }
+    }
+
+    //捕捉图像
+    function capture() {
+      if (promise) {
+        const canvas = document.getElementById('canvas');
+        const video = document.getElementById('video');
+        canvas.width = video.clientWidth;
+        canvas.height = video.clientHeight;
+        var context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0);
+      }else{
+        alert('请先打开摄像头');
+      }
+    }
+
+    var filters = ['', 'grayscale', 'sepia', 'invert'];
+    var currentFilter = 0;
+    const canvas = document.getElementById('canvas');
+
+    function changeFilter() {
+      //动态改变滤镜
+      currentFilter++;
+      if (currentFilter > filters.length - 1) currentFilter = 0;
+      canvas.className = filters[currentFilter];
+      /*****End*****/
+    }
+
+  </script>
+
+  <style>
+    .grayscale {
+      -webkit-filter: grayscale(1);
+      filter: grayscale(1);
+    }
+    .sepia {
+      -webkit-filter: sepia(1);
+      filter: sepia(1);
+    }
+
+    .invert {
+      -webkit-filter: invert(1);
+      filter: invert(1);
+    }
+  </style>
+</html>

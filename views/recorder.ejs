@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+<div><video autoplay controls id="video">
+    </video>
+    <video id="recordPlayer"></video></div>
+<button onclick="showVideo()">打开</button>
+<button id="recordBtn">开始录制</button>
+<button id="downloadBtn">下载</button>
+
+</body>
+
+<script>
+    function canGetUserMediaUse() {
+        return !!(navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia ||
+            navigator.msGetUserMedia);
+    }
+
+    function getUserMedia(constrains, success, error) {
+        if (navigator.mediaDevices.getUserMedia) {
+            //最新标准API
+            promise = navigator.mediaDevices.getUserMedia(constrains).then(success).catch(error);
+        } else if (navigator.webkitGetUserMedia) {
+            //webkit内核浏览器
+            promise = navigator.webkitGetUserMedia(constrains).then(success).catch(error);
+        } else if (navigator.mozGetUserMedia) {
+            //Firefox浏览器
+            promise = navagator.mozGetUserMedia(constrains).then(success).catch(error);
+        } else if (navigator.getUserMedia) {
+            //旧版API
+            promise = navigator.getUserMedia(constrains).then(success).catch(error);
+        }
+    }
+
+    function showVideo() {
+        if (canGetUserMediaUse()) {
+            getUserMedia({
+                video: true,
+                audio: true
+            }, function (stream) {
+                mediaStream = stream;
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                video.play();
+            }, function (error) {
+                console.log("访问用户媒体设备失败：", error.name, error.message);
+            })
+        } else {
+            alert('您的浏览器不兼容');
+        }
+    }
+
+    var recordBtn = document.getElementById('recordBtn');
+    var downloadBtn = document.getElementById('downloadBtn');
+    var recordPlayer = document.getElementById('recordPlayer');
+    var buffer;
+    var mediaRecoder;
+
+    recordBtn.onclick = function () {
+        if (promise) {
+            if (recordBtn.textContent === '开始录制') {
+                startRecord();
+                recordBtn.textContent = '停止录制';
+            } else if (recordBtn.textContent === '停止录制') {
+                stopRecord();
+                recordBtn.textContent = '开始录制';
+                downloadBtn.removeAttribute('disabled');
+            }
+        } else {
+            alert("请打开摄像头！！");
+        }
+    }
+
+    function startRecord() {
+        /*****Begin*****/
+        //开始录制
+        buffer = [];
+        mediaRecoder = new MediaRecorder(mediaStream);
+        mediaRecoder.ondataavailable = function(e) {
+            if(e && e.data && e.data.size >0) {
+                buffer.push(e.data);
+            }
+        }
+
+        mediaRecoder.start(10);
+    }
+
+    function stopRecord() {
+        //停止录制
+        mediaRecoder.stop();
+        var blob = new Blob(buffer,{type:'viedo/mp4'});
+        console.log(blob);
+
+        //根据缓存数据生成url给reocordPlayer进行播放
+        recordPlayer.src = window.URL.createObjectURL(blob);
+        recordPlayer.srcObject = null;
+        //显示播放控件
+        recordPlayer.controls = true;
+        /*****End*****/
+    }
+
+    downloadBtn.onclick = function () {
+        var blob = new Blob(buffer, {
+            type: 'video/mp4'
+        });
+        //根据缓存数据生成url
+        var url = window.URL.createObjectURL(blob);
+        //创建一个a标签，通过a标签指向url来下载
+        var a = document.createElement('a');
+        a.href = url;
+        a.style.display = 'none'; //不显示a标签
+        a.download = new Date().toLocaleTimeString();
+        a.click(); //调用a标签的点击事件进行下载
+    }
+</script>
+
+</html>
