@@ -10,7 +10,7 @@ router.get('/recorder',function (req,res,next) {
   res.render('recorder');
 });
 /* GET WebRTC page. */
-router.get('/WenRTC',function (req,res,next) {
+router.get('/WebRTC',function (req,res,next) {
   res.render('WebRTC');
 });
 
