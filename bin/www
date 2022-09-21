@@ -20,7 +20,7 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
-
+console.log("The HTTP server is up and running");
 var io = require("socket.io")(server);
 
 io.on("connection", (socket) => {
